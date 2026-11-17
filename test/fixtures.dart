@@ -430,6 +430,45 @@ final class Fixture {
     add('demo');
     shas['demo'] = commit('demo');
 
+    // flasher-web: the second app from the same brick, with the same pins and
+    // no AERA kit.
+    init('flasher-web');
+    write(
+      'flasher-web',
+      'pubspec.yaml',
+      'name: flasher_web_workspace\npublish_to: none\n',
+    );
+    for (final member in ['core', 'app', 'cli']) {
+      write(
+        'flasher-web',
+        '$member/pubspec.yaml',
+        _consumerPubspec(shas, withFrb: member == 'core'),
+      );
+    }
+    write('flasher-web', 'analysis_options.yaml', _analysisOptions(bricksBase));
+    write(
+      'flasher-web',
+      'rust/Cargo.toml',
+      '[package]\nname = "flasher_web_native"\nversion = "0.1.0"\n\n[dependencies]\n'
+          'flutter_rust_bridge = { version = "=$frbVersion", default-features = false, features = ["anyhow"] }\n',
+    );
+    write(
+      'flasher-web',
+      'tool/regen.sh',
+      '#!/usr/bin/env bash\nset -euo pipefail\n',
+    );
+    write(
+      'flasher-web',
+      '.github/workflows/ci.yml',
+      _workflow(
+        flutter: flutterVersion,
+        flutterP0g: shas['flutter_p0g'],
+        bricks: shas['bricks'],
+      ),
+    );
+    add('flasher-web');
+    shas['flasher-web'] = commit('flasher-web');
+
     final fixture = Fixture(root, shas);
     fixture.writeLock({
       'schema': 1,
@@ -443,6 +482,7 @@ final class Fixture {
         for (final repo in [
           'bricks',
           'demo',
+          'flasher-web',
           'flutter-aera',
           'flutter-webui',
           'flutter_p0g',

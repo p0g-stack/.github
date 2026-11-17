@@ -122,17 +122,17 @@ void main() {
   test('a missing repository is a failure, not a skip', () {
     final missing = _hex('c');
     final lock = _fixture.readLock();
-    (lock['repos'] as Map<String, dynamic>)['flasher-web'] = missing;
+    (lock['repos'] as Map<String, dynamic>)['dotfiles'] = missing;
     _fixture.writeLock(lock);
 
     expect(
       _run(_fixture),
       contains(
-        'flasher-web:- checkout expected=$missing actual=<missing repository>',
+        'dotfiles:- checkout expected=$missing actual=<missing repository>',
       ),
     );
 
-    (lock['repos'] as Map<String, dynamic>).remove('flasher-web');
+    (lock['repos'] as Map<String, dynamic>).remove('dotfiles');
     _fixture.writeLock(lock);
     expect(_run(_fixture), isEmpty);
   });

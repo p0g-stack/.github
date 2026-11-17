@@ -81,6 +81,7 @@ If an upload was wrong, cut a new tag and move the consumers.
   names each owner SHA that the other repositories' manifests and workflows
   actually use, so a documentation-only owner commit does not move it.
 - `flasher-web` follows the qualified stack; the stack does not follow it.
-  Rebase it after the order above is green, not in the middle.
+  Rebase it after the order above is green, not in the middle, and record its
+  accepted SHA in `stack.lock.json` like the other repositories.
 - Record evidence per [support.md](support.md) when a step produces an
   engineering claim.

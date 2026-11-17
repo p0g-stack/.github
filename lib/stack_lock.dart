@@ -113,6 +113,7 @@ final class _GitDep {
 const requiredRepos = <String>[
   'bricks',
   'demo',
+  'flasher-web',
   'flutter-aera',
   'flutter-webui',
   'flutter_p0g',
@@ -308,7 +309,8 @@ final class StackCheck {
     _checkFlutterAera();
     _checkSquadronProcess();
     _checkBricks();
-    _checkDemo();
+    _checkApp('demo');
+    _checkApp('flasher-web');
     _checkWebuiPackages();
     _checkWebuiTermuxApi();
     _checkFrb();
@@ -793,34 +795,63 @@ final class StackCheck {
     }
   }
 
-  // --- demo --------------------------------------------------------------
+  // --- apps (demo, flasher-web) ------------------------------------------
 
-  void _checkDemo() {
-    final repo = _repo('demo');
+  /// Both apps are generated from the `p0g_app` brick: their manifests pin
+  /// the owners, their CI names the tool and the brick, and `demo` also pins
+  /// the AERA kit.
+  void _checkApp(String name) {
+    final repo = _repo(name);
     if (repo == null) return;
-    final files = repo.lsTree(_locked('demo'));
+    final files = repo.lsTree(_locked(name));
     if (files == null) {
-      _problem('demo', '-', 'ls-tree', 'tree', null);
+      _problem(name, '-', 'ls-tree', 'tree', null);
       return;
     }
     for (final file in files) {
       if (file.endsWith('pubspec.yaml') || file == 'analysis_options.yaml') {
-        _checkConsumerManifest('demo', file, file);
+        _checkConsumerManifest(name, file, file);
       }
     }
-    _checkConsumerManifest('demo', 'rust/Cargo.toml', 'rust/Cargo.toml');
+    _checkConsumerManifest(name, 'rust/Cargo.toml', 'rust/Cargo.toml');
 
     const ci = '.github/workflows/ci.yml';
     const regen = 'tool/regen.sh';
-    final workflow = _read('demo', ci);
-    final doc = workflow == null ? null : _yamlMap(workflow, 'demo', ci);
+    final workflow = _read(name, ci);
+    final doc = workflow == null ? null : _yamlMap(workflow, name, ci);
     final env = doc?['env'] is Map
         ? doc!['env'] as Map
         : const <dynamic, dynamic>{};
     final tool = env['FLUTTER_P0G_REF'];
     if ('$tool' != _locked('flutter_p0g')) {
-      _problem('demo', ci, 'env.FLUTTER_P0G_REF', _locked('flutter_p0g'), tool);
+      _problem(name, ci, 'env.FLUTTER_P0G_REF', _locked('flutter_p0g'), tool);
     }
+    if (name == 'demo') _checkDemoKit(ci, env);
+
+    // BRICKS_REF: the workflow env, or a tool/regen.sh literal in older
+    // layouts. At least one must name the locked bricks commit.
+    final envRef = env['BRICKS_REF'];
+    final script = _read(name, regen);
+    final scriptRef = script == null
+        ? null
+        : RegExp(
+            r'^BRICKS_REF=([0-9a-f]{40})$',
+            multiLine: true,
+          ).firstMatch(script)?.group(1);
+    if (scriptRef == null && envRef == null) {
+      _problem(name, regen, 'BRICKS_REF', _locked('bricks'), null);
+    }
+    if (scriptRef != null && scriptRef != _locked('bricks')) {
+      _problem(name, regen, 'BRICKS_REF', _locked('bricks'), scriptRef);
+    }
+    if (envRef != null && '$envRef' != _locked('bricks')) {
+      _problem(name, ci, 'env.BRICKS_REF', _locked('bricks'), envRef);
+    }
+  }
+
+  /// The demo's arm64 debug kit must be the one flutter_p0g's table records,
+  /// built by the locked flutter-aera commit.
+  void _checkDemoKit(String ci, Map env) {
     final kitSha = env['AERA_KIT_SHA256'];
     final kitUrl = env['AERA_KIT_URL'];
     final pins = _read('flutter_p0g', 'lib/src/artifact_pins.dart');
@@ -838,35 +869,15 @@ final class StackCheck {
         'flutter_p0g aeraKitPins linux-arm64-debug',
         kitSha,
       );
-    } else {
-      if ('$kitSha' != arm64.sha256) {
-        _problem('demo', ci, 'env.AERA_KIT_SHA256', arm64.sha256, kitSha);
-      }
-      final sourceTag = 'kit-$flutterVersion-${_locked('flutter-aera')}';
-      final url = '$kitUrl';
-      if (url != arm64.url && !url.contains('/$sourceTag/')) {
-        _problem('demo', ci, 'env.AERA_KIT_URL', arm64.url, kitUrl);
-      }
+      return;
     }
-
-    // BRICKS_REF: the workflow env, or a tool/regen.sh literal in older
-    // layouts. At least one must name the locked bricks commit.
-    final envRef = env['BRICKS_REF'];
-    final script = _read('demo', regen);
-    final scriptRef = script == null
-        ? null
-        : RegExp(
-            r'^BRICKS_REF=([0-9a-f]{40})$',
-            multiLine: true,
-          ).firstMatch(script)?.group(1);
-    if (scriptRef == null && envRef == null) {
-      _problem('demo', regen, 'BRICKS_REF', _locked('bricks'), null);
+    if ('$kitSha' != arm64.sha256) {
+      _problem('demo', ci, 'env.AERA_KIT_SHA256', arm64.sha256, kitSha);
     }
-    if (scriptRef != null && scriptRef != _locked('bricks')) {
-      _problem('demo', regen, 'BRICKS_REF', _locked('bricks'), scriptRef);
-    }
-    if (envRef != null && '$envRef' != _locked('bricks')) {
-      _problem('demo', ci, 'env.BRICKS_REF', _locked('bricks'), envRef);
+    final sourceTag = 'kit-$flutterVersion-${_locked('flutter-aera')}';
+    final url = '$kitUrl';
+    if (url != arm64.url && !url.contains('/$sourceTag/')) {
+      _problem('demo', ci, 'env.AERA_KIT_URL', arm64.url, kitUrl);
     }
   }
 
@@ -982,6 +993,7 @@ final class StackCheck {
         'bricks/p0g_app/__brick__/{{name.snakeCase()}}/core/pubspec.yaml',
       ),
       ('demo', 'core/pubspec.yaml'),
+      ('flasher-web', 'core/pubspec.yaml'),
     ]) {
       final text = _read(repo, path);
       if (text == null) continue;
@@ -1004,6 +1016,7 @@ final class StackCheck {
         'bricks/p0g_app/__brick__/{{name.snakeCase()}}/{{#rust}}rust{{/rust}}/Cargo.toml',
       ),
       ('demo', 'rust/Cargo.toml'),
+      ('flasher-web', 'rust/Cargo.toml'),
     ]) {
       final text = _read(repo, path);
       if (text == null) continue;
@@ -1046,6 +1059,7 @@ final class StackCheck {
     for (final (repo, dir) in [
       ('flutter_p0g', '.github/workflows'),
       ('demo', '.github/workflows'),
+      ('flasher-web', '.github/workflows'),
       ('bricks', '.github/workflows'),
       ('flutter-aera', '.github/workflows'),
       ('flutter-webui', '.github/workflows'),
@@ -1118,13 +1132,14 @@ final class StackCheck {
       }
     }
 
-    // Required dependencies of the generated app (plan 8.3).
-    if (relative == 'core/pubspec.yaml' ||
-        relative == 'app/pubspec.yaml' ||
-        relative == 'cli/pubspec.yaml') {
+    // Required dependencies of a generated app (plan 8.3): the pure-Dart core
+    // carries the places, the WebUI client and FRB; the CLI is also the root
+    // process and carries the places. The GUI reaches them through the core.
+    if (relative == 'core/pubspec.yaml' || relative == 'cli/pubspec.yaml') {
       for (final (name, owner) in [
         ('squadron_process', 'squadron_process'),
-        ('flutter_webui_client', 'flutter-webui'),
+        if (relative == 'core/pubspec.yaml')
+          ('flutter_webui_client', 'flutter-webui'),
       ]) {
         if (!deps.any((d) => d.name == name)) {
           _problem(repo, path, '$name.ref', _locked(owner), null);

@@ -37,7 +37,7 @@ rows link to the public record instead.
 | `webui-packages` plugin packages | GitHub-hosted runner, Flutter 3.47.5 | `webui-packages@7bfff1a` | built | [ci run 37085907275](https://github.com/p0g-stack/webui-packages/actions/runs/37085907275) |
 | `webui-termux-api` module APK (`assembleDebug`, Java 17) | GitHub-hosted runner, Gradle 8.9 / AGP 8.7.3 | `webui-termux-api@c8675d0` | built | [build run 44037007753](https://github.com/p0g-stack/webui-termux-api/actions/runs/44037007753) |
 | `flutter_p0g` tool | GitHub-hosted runner, Flutter 3.47.5 | `flutter_p0g@5d376dd` | built | [ci run 42962612537](https://github.com/p0g-stack/flutter_p0g/actions/runs/42962612537) |
-| `flasher-web` app, CLI, Rust crates, Worker | local Linux host, Flutter 3.47.5 | `flasher-web@0236a72` | built | its own suites; fake fastboot device only (not yet published) |
+| `flasher-web` web build, CLI, Rust crates, Worker | GitHub-hosted runner, Flutter 3.47.9; Chromium through the e2e harness for the release page | `flasher-web@aa2b7eb`, `flutter_p0g@a00aa6a`, `bricks@81f6282` | browser | [ci run 44053739488](https://github.com/p0g-stack/flasher-web/actions/runs/44053739488): bootstrap reproducibility, all suites, fake-fastboot marker rejected in the release, read-only release-page smoke on the built artifacts |
 
 The rows above are the whole claim. Two documents elsewhere still say less
 than this table shows:
