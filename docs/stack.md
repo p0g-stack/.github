@@ -19,6 +19,12 @@ but must be its ancestor (or equal). Both commits must have the same
 version must match their recorded pins. A source-only host update therefore
 does not force a rebuild of unchanged SDK patches.
 
+A pin need not be on a repository's `main`: a track that later moved on keeps
+its own branch. The 3.47.9 checkpoint pins `flutter-webui` at the tip of
+`webuix660-3.47.9` (72df180), because `main` went on to 3.50.0. Pins on a
+branch are as durable as `main` only while that branch exists; do not delete a
+track branch that the lock names.
+
 ## Languages and names
 
 - A repository that is one Dart package uses the package name with
