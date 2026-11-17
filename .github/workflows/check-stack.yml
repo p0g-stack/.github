@@ -1,0 +1,93 @@
+# Checks the recorded compatibility set: every locked repository is read at
+# the SHA stack.lock.json names (never a branch head), and every consumer pin
+# must agree with it. The lock advances only after the relevant qualification
+# passes, in a reviewed change; nothing here updates dependencies or publishes.
+name: check-stack
+on:
+  push:
+    branches: [main]
+    paths:
+      - stack.lock.json
+      - pubspec.yaml
+      - pubspec.lock
+      - lib/**
+      - tool/**
+      - test/**
+      - .github/workflows/check-stack.yml
+  pull_request:
+    paths:
+      - stack.lock.json
+      - pubspec.yaml
+      - pubspec.lock
+      - lib/**
+      - tool/**
+      - test/**
+      - .github/workflows/check-stack.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: check-stack-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: .github
+      # One sibling checkout per locked repository, at the locked SHA. Its
+      # history comes along, so the helperRef commit in flutter_p0g is there
+      # to compare package trees against; tags resolve the app-plane release
+      # flutter_p0g pins.
+      - name: Locked repositories
+        working-directory: .github
+        run: |
+          set -euo pipefail
+          jq -r '.repos | to_entries[] | "\(.key) \(.value)"' stack.lock.json |
+          while read -r repo sha; do
+            [ -n "$repo" ] || continue
+            dir="$GITHUB_WORKSPACE/$repo"
+            rm -rf "$dir"
+            git init -q "$dir"
+            git -C "$dir" remote add origin "https://github.com/p0g-stack/$repo"
+            git -C "$dir" fetch -q --tags origin "$sha"
+            git -C "$dir" checkout -q FETCH_HEAD
+            printf '%s %s\n' "$repo" "$(git -C "$dir" rev-parse HEAD)"
+          done
+      # The Dart the lock names, so the checker and the apps agree on one SDK.
+      - name: Dart version
+        id: dart
+        working-directory: .github
+        run: echo "version=$(jq -r .flutter.dart stack.lock.json)" >> "$GITHUB_OUTPUT"
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ steps.dart.outputs.version }}
+      # Only the pinned upstream FRB commit, into a temporary checkout: the
+      # checker reads frb_rust/Cargo.toml there for the Rust version its Dart
+      # refs must match. A missing commit or manifest fails this step.
+      - name: Upstream flutter_rust_bridge
+        working-directory: .github
+        run: |
+          set -euo pipefail
+          frb=$(awk -F "'" '/^const kFrbCommit = / {print $2}' "$GITHUB_WORKSPACE/flutter_p0g/lib/src/frb/frb.dart")
+          [ "${#frb}" = 40 ] || { echo "::error::kFrbCommit is '$frb', not a full commit"; exit 1; }
+          git init -q "$RUNNER_TEMP/frb"
+          git -C "$RUNNER_TEMP/frb" remote add origin https://github.com/fzyzcjy/flutter_rust_bridge
+          git -C "$RUNNER_TEMP/frb" fetch -q --depth 1 origin "$frb"
+          git -C "$RUNNER_TEMP/frb" checkout -q FETCH_HEAD
+          [ -f "$RUNNER_TEMP/frb/frb_rust/Cargo.toml" ] || {
+            echo "::error::flutter_rust_bridge $frb has no frb_rust/Cargo.toml"; exit 1; }
+          sed -n '1,12p' "$RUNNER_TEMP/frb/frb_rust/Cargo.toml"
+          echo "FRB=$RUNNER_TEMP/frb" >> "$GITHUB_ENV"
+      - name: Checker
+        working-directory: .github
+        run: |
+          dart pub get
+          dart format --output=none --set-exit-if-changed lib tool test
+          dart analyze
+          dart test
+      - name: Check the lock
+        working-directory: .github
+        run: dart run tool/check_pins.dart --workspace .. --lock stack.lock.json --frb "$FRB"

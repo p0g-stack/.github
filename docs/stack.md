@@ -5,6 +5,13 @@ Current pin values are never copied here; every repository has a `PINS.md`
 with its own pins, and the bump order across repositories is
 [flutter-bump.md](flutter-bump.md).
 
+The one snapshot that names values is [`stack.lock.json`](../stack.lock.json):
+the Flutter/Dart versions and one full SHA per owner, read as consumers pin
+them. `tool/check_pins.dart` checks every repository against it through
+`git show <locked-sha>:<path>` ([check-stack](../.github/workflows/check-stack.yml)),
+so a pin that drifts from the snapshot fails there rather than in an app
+build.
+
 ## Languages and names
 
 - A repository that is one Dart package uses the package name with

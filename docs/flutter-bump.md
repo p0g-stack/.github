@@ -35,6 +35,7 @@ place: keep the old SDK available until the new one has passed.
 | 6 | bricks | the `p0g_app` brick's `ref:`s (`squadron_process`; flutter-webui equal to flutter_p0g's; frb equal to `kFrbCommit`); CI `flutter-version`; brick version bump | nothing | brick CI generates and builds an app |
 | 7 | demo | `BRICKS_REF` then `tool/regen.sh`; `FLUTTER_P0G_REF`; `flutter-version` in all four jobs | release `v<x.y.n>`: zip, `app.apk`, `.aerap` | CI green; regen prints `matches p0g_app`; the managers lab walks the release |
 | 8 | devicelab | `aera-cf.yml` `flutter-version`; `aera/kit/build-x64.sh` `FA_REV`; re-sync `aera/build/patches`; manager pins | nothing | the lab runs against the new kit and image |
+| 9 | .github | `stack.lock.json`: the Flutter/Dart versions and one full SHA per owner, as consumers now pin them | nothing | `dart run tool/check_pins.dart --workspace .. --lock stack.lock.json` exits 0 and `check-stack` is green |
 
 Steps 2a, 2b and 2c are independent and can run in parallel; step 3 needs 2a.
 
@@ -43,16 +44,19 @@ Steps 2a, 2b and 2c are independent and can run in parallel; step 3 needs 2a.
 Artifacts are consumed by hash, so a bump that moves an artifact moves the
 consumers' hashes in the same step:
 
-- `kit-<flutter>` is uploaded with `--clobber`
-  (`gh release upload "$tag" dist/* --clobber` in `kit.yml`), so the tag is
-  not an identity. A consumer that needs a fixed kit passes its SHA256:
-  `flutter_p0g precache --aera-kit-sha256=<hash>`, and `demo` keeps it in
-  `AERA_KIT_SHA256`. Only debug kits are produced; nothing in this stack
-  claims a profile or release kit.
-- `devicelab`'s `aera-cf.yml` re-downloads the newest upload of
-  `kit-<flutter>` and trusts the release's own `.sha256` file. That is the
-  publisher's checksum, not an independent pin: a lab run must record the
-  SHA256 it used so its evidence can be re-checked.
+- `kit-<flutter>-<flutter-aera commit>` is the identity: the Kit workflow
+  uploads through `.github/scripts/immutable-release-upload.sh`, so a released
+  asset is never replaced (identical bytes are skipped, different bytes fail
+  the run). Consumers pass the kit by URL and SHA256: `flutter_p0g`'s
+  `aeraKitPins` (the producer commit is the comment above the entry) and
+  `demo`'s `AERA_KIT_URL`/`AERA_KIT_SHA256`. The older `kit-<flutter>` tags
+  (e.g. `kit-3.47.5`) were re-uploaded with `--clobber`; they stay available
+  but no new consumer pins them. Only debug kits are produced; nothing in
+  this stack claims a profile or release kit.
+- `devicelab`'s `aera-cf.yml` names a source-tagged kit and its SHA256; a
+  lab run must record the SHA256 it used so its evidence can be re-checked.
+  The publisher's `.sha256` file is a transport check, not an independent
+  pin.
 - The Android Dart kit (`dart-android-<dart version>`) is verified only when
   the expected hash is passed (`precache --dart-android-sha256=<hash>`); CI
   that relies on a kit should pass it.
@@ -73,6 +77,9 @@ If an upload was wrong, cut a new tag and move the consumers.
 - Do not advance pins for documentation-only commits.
 - A pin whose value you did not verify is a placeholder: read it from the
   owner (`git show <sha>:<path>`), not from a `latest` ref.
+- The lock moves last, and only to what consumers pin: `stack.lock.json`
+  names each owner SHA that the other repositories' manifests and workflows
+  actually use, so a documentation-only owner commit does not move it.
 - `flasher-web` follows the qualified stack; the stack does not follow it.
   Rebase it after the order above is green, not in the middle.
 - Record evidence per [support.md](support.md) when a step produces an
