@@ -186,6 +186,64 @@ void main() {
     expect(_run(_fixture), isEmpty);
   });
 
+  test('a changed flasher-web pin fails with the exact expected/actual', () {
+    final lock = _fixture.readLock();
+    final repos = lock['repos'] as Map<String, dynamic>;
+
+    // A dependency on another owner commit than the lock names.
+    final changed = 'fedcba9876543210fedcba9876543210fedcba98';
+    final core = File(
+      p.join(_fixture.dir, 'flasher-web', 'core', 'pubspec.yaml'),
+    ).readAsStringSync();
+    final pinned = _fixture.shas['squadron_process']!;
+    final coreCommit = _fixture.commit(
+      'flasher-web',
+      'core/pubspec.yaml',
+      core.replaceFirst(pinned, changed),
+      message: 'pin a squadron commit the lock does not name',
+    );
+    repos['flasher-web'] = coreCommit;
+    _fixture.writeLock(lock);
+
+    expect(
+      _run(_fixture),
+      equals([
+        'flasher-web:core/pubspec.yaml squadron_process.ref expected=$pinned actual=$changed',
+      ]),
+    );
+    expect(_cli(_fixture).exitCode, 1);
+
+    // The helper package is a Git ref too: it must be helperRef, not any
+    // commit of the tool.
+    final root = File(p.join(_fixture.dir, 'flasher-web', 'pubspec.yaml'))
+        .readAsStringSync();
+    final helper = _fixture.shas['helperRef']!;
+    // The previous commit changed the core; put it back so this case shows one
+    // diagnostic.
+    File(p.join(_fixture.dir, 'flasher-web', 'core', 'pubspec.yaml'))
+        .writeAsStringSync(core);
+    final rootCommit = _fixture.commit(
+      'flasher-web',
+      'pubspec.yaml',
+      root.replaceFirst(helper, _fixture.shas['flutter_p0g']!),
+      message: 'pin the helper at the tool head instead of helperRef',
+    );
+    repos['flasher-web'] = rootCommit;
+    _fixture.writeLock(lock);
+
+    expect(
+      _run(_fixture),
+      equals([
+        'flasher-web:pubspec.yaml patched_source.ref expected=$helper '
+            'actual=${_fixture.shas['flutter_p0g']}',
+      ]),
+    );
+
+    repos['flasher-web'] = _fixture.shas['flasher-web'];
+    _fixture.writeLock(lock);
+    expect(_run(_fixture), isEmpty);
+  });
+
   test('a kit whose producer comment names another commit fails', () {
     final path = p.join(
       _fixture.dir,

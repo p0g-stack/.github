@@ -436,7 +436,13 @@ final class Fixture {
     write(
       'flasher-web',
       'pubspec.yaml',
-      'name: flasher_web_workspace\npublish_to: none\n',
+      'name: flasher_web_workspace\npublish_to: none\n'
+          'dev_dependencies:\n'
+          '  patched_source:\n'
+          '    git:\n'
+          '      url: https://github.com/p0g-stack/flutter_p0g\n'
+          '      path: packages/patched_source\n'
+          '      ref: $helperRef\n',
     );
     for (final member in ['core', 'app', 'cli']) {
       write(
