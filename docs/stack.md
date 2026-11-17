@@ -12,6 +12,13 @@ them. `tool/check_pins.dart` checks every repository against it through
 so a pin that drifts from the snapshot fails there rather than in an app
 build.
 
+`webSdkProducer` records the full flutter-webui commit that produced the
+patched SDK. It may precede the `repos.flutter-webui` Dart/client source pin,
+but must be its ancestor (or equal). Both commits must have the same
+`web_ui/` tree, matching `kWebSdkTree`; the release tag, engine and Flutter
+version must match their recorded pins. A source-only host update therefore
+does not force a rebuild of unchanged SDK patches.
+
 ## Languages and names
 
 - A repository that is one Dart package uses the package name with

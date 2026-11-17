@@ -1,5 +1,6 @@
 {
   "schema": 1,
+  "webSdkProducer": "374766e3913972aedca2e0a7778d88b5d398459a",
   "flutter": {
     "version": "3.47.9",
     "framework": "c197ca5199e9ee5661e865596c9c07294dfab51c",

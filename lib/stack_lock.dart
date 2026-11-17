@@ -57,6 +57,9 @@ final class GitRepo {
     return r.exitCode == 0 ? (r.stdout as String).trim() : null;
   }
 
+  bool _isAncestor(String ancestor, String descendant) =>
+      _git(['merge-base', '--is-ancestor', ancestor, descendant]).exitCode == 0;
+
   /// The file [path] at [rev], or null when it does not exist there.
   String? show(String rev, String path) {
     final r = _git(['show', '$rev:$path']);
@@ -231,6 +234,17 @@ final class StackCheck {
       );
       return false;
     }
+    if (_lock['webSdkProducer'] is! String ||
+        !_sha40.hasMatch(_lock['webSdkProducer'] as String)) {
+      _problem(
+        '.github',
+        'stack.lock.json',
+        'webSdkProducer',
+        'full commit',
+        _lock['webSdkProducer'],
+      );
+      return false;
+    }
     for (final name in requiredRepos) {
       if (!_lockedRepos.containsKey(name)) {
         _problem(
@@ -342,11 +356,12 @@ final class StackCheck {
         flutterEngine,
         webui,
       );
-      final webuiShort = _locked('flutter-webui').substring(0, 7);
+      final owner = _repo('flutter-webui');
+      final producer = _lock['webSdkProducer'] as String;
       final engineShort = flutterEngine.substring(0, 7);
       final release = _constString(webui, 'kWebSdkRelease');
       final expectedRelease =
-          'web-sdk-$flutterVersion-$engineShort-$webuiShort';
+          'web-sdk-$flutterVersion-$engineShort-${producer.substring(0, 7)}';
       if (release != expectedRelease) {
         _problem(
           'flutter_p0g',
@@ -356,9 +371,29 @@ final class StackCheck {
           release,
         );
       }
+      final resolvedProducer = owner?.commit(producer);
+      if (resolvedProducer == null ||
+          !owner!._isAncestor(producer, _locked('flutter-webui'))) {
+        _problem(
+          'flutter_p0g',
+          webuiPath,
+          'kWebSdkProducer',
+          'ancestor of ${_locked('flutter-webui')}',
+          resolvedProducer ?? '<missing object>',
+        );
+      }
       final tree = _constString(webui, 'kWebSdkTree');
-      final ownerTree = _repo('flutter-webui')
-          ?.tree(_locked('flutter-webui'), 'web_ui');
+      final ownerTree = owner?.tree(_locked('flutter-webui'), 'web_ui');
+      final producerTree = owner?.tree(producer, 'web_ui');
+      if (producerTree == null || producerTree != ownerTree) {
+        _problem(
+          'flutter_p0g',
+          webuiPath,
+          'kWebSdkProducerTree',
+          ownerTree ?? '<flutter-webui web_ui tree>',
+          producerTree,
+        );
+      }
       if (tree == null || ownerTree == null || tree != ownerTree) {
         _problem(
           'flutter_p0g',

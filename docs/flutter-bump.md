@@ -64,6 +64,10 @@ consumers' hashes in the same step:
   (`kWebSdkRelease`, `kWebSdkSha256`) and is downloaded only when the pinned
   flutter-webui `web_ui/` tree and the installed engine match; otherwise
   `precache --webui` builds it locally.
+  The lock's `webSdkProducer` is the full producer SHA, not necessarily the
+  current flutter-webui source pin. Reuse requires producer ancestry and
+  equality of both `web_ui/` trees and `kWebSdkTree`; engine and Flutter
+  version must still match. A changed patch tree requires a new SDK release.
 - `engine-<rev:7>-<series:8>` names the patch series by hash, so a patch
   change is a new release rather than new bytes under the same name.
 

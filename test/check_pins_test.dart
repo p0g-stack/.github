@@ -54,6 +54,31 @@ void main() {
     expect('${result.stdout}', contains('stack.lock.json: ok'));
   });
 
+  test('a source-only descendant can reuse its ancestor web SDK', () {
+    final fixture = Fixture.build(
+      p.join(_temp.path, 'sdk-source-only'),
+      webuiChangeAfterProducer: 'client-change.txt',
+    );
+    expect(_run(fixture), isEmpty);
+    expect(_cli(fixture).exitCode, 0);
+  });
+
+  test('web_ui changed after the SDK producer fails with exit 1', () {
+    final fixture = Fixture.build(
+      p.join(_temp.path, 'sdk-tree-changed'),
+      webuiChangeAfterProducer: 'web_ui/changed.patch',
+    );
+    expect(
+      _run(fixture),
+      contains(
+        startsWith(
+          'flutter_p0g:lib/src/webui/flutter_webui.dart kWebSdkProducerTree ',
+        ),
+      ),
+    );
+    expect(_cli(fixture).exitCode, 1);
+  });
+
   test('one changed consumer pin fails with the exact expected/actual', () {
     final changed = '0123456789abcdef0123456789abcdef01234567';
     final core = File(p.join(_fixture.dir, 'demo', 'core', 'pubspec.yaml'))

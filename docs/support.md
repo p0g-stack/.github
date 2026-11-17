@@ -21,8 +21,6 @@ rows link to the public record instead.
 | `demo` web build (JS, single-threaded wasm-free page) | headless Chromium, Ubuntu, static server under `/demo/` | `demo@a3fc86f`, `flutter_p0g@e739ada`, Flutter 3.47.5 | browser | [ci run 37285804931](https://github.com/p0g-stack/demo/actions/runs/37285804931) (`web` job, Chromium smoke check) |
 | `demo` published site | GitHub Pages, Chrome-class browser | `web` branch, built from `a3fc86f` | browser | <https://p0g-stack.github.io/demo/> ([pages run 37286481231](https://github.com/p0g-stack/demo/actions/runs/37286481231)) |
 | `demo` WebUI module zip | assembled in CI, no run | `demo@a3fc86f`, `flutter_p0g@e739ada` | built | [ci run 37285804931](https://github.com/p0g-stack/demo/actions/runs/37285804931) (`module` job) |
-| `demo` module: root process, Back, app plane, shortcut, close timing, on WebUI X v608 as well as v438 | Android 15 AVD, KernelSU 3.3.0; WebUI X Portable v438 and WebUI X v608 (Play, sha256 `ae88a8ca…afb2`) | `demo v0.1.59` (`a3fc86f`), `flutter-webui@8951e5f` | simulator | [observations/avd-35-x86_64/webuix-v608-2026-10-05.md](https://github.com/p0g-stack/devicelab/blob/main/observations/avd-35-x86_64/webuix-v608-2026-10-05.md) (last section), [run 37289032287](https://github.com/p0g-stack/devicelab/actions/runs/37289032287), [run 37295018165](https://github.com/p0g-stack/devicelab/actions/runs/37295018165) |
-| WebUI X v608 page extras: package list and info, `ksu://icon`, `webui.createShortcut` + pin dialog, SHELL refusal | Android 15 AVD, WebUI X v608 (Play); v438 and KernelSU 3.3.0 for contrast | `extras_lab v1.0.0` (`cdfd6048…`), `flutter-webui@60c0b77` | simulator | [webuix-v608-2026-10-05.md](https://github.com/p0g-stack/devicelab/blob/main/observations/avd-35-x86_64/webuix-v608-2026-10-05.md) ("flutter-webui 60c0b77 extras lab"), [run 37281608189](https://github.com/p0g-stack/devicelab/actions/runs/37281608189), [run 37283223230](https://github.com/p0g-stack/devicelab/actions/runs/37283223230) (extras-only runs: the job reports failure because no standard checklist ran; the case data is complete) |
 | `demo` managers lab: mount, share, camera deny/deny/grant, paste/copy, file pick | Android 15 AVD, KernelSU / KernelSU Next, Mountify | `demo v0.1.39` | simulator | [observations/avd-35-x86_64/managers-2026-10-02.md](https://github.com/p0g-stack/devicelab/blob/main/observations/avd-35-x86_64/managers-2026-10-02.md) |
 | `demo` `module.prop`, app plane, Hybrid Mount on real hardware | OnePlus phone, KernelSU Next, Hybrid Mount 4.2.0 | `demo v0.1.39`, app plane `0.53.0-webui.6` | physical | [observations/real-device/hybrid-mount-2026-10-02.md](https://github.com/p0g-stack/devicelab/blob/main/observations/real-device/hybrid-mount-2026-10-02.md) |
 | `demo` `.aerap` in AERA Recovery | Cuttlefish x86_64, image `aera-cf-x86_64-90aeba8-242db857a00545f4` | `devicelab@e52cc62`, kit-3.47.5 | simulator | [aera-cf run 37582507317](https://github.com/p0g-stack/devicelab/actions/runs/37582507317), gate list in [aera/DEFICIENCIES.md](https://github.com/p0g-stack/devicelab/blob/main/aera/DEFICIENCIES.md) |
@@ -48,6 +46,18 @@ than this table shows:
   `example/` `.aerap`, not a run.
 - The upstream submission table below records the actual PR state, not the
   "submitted, awaiting review" the old notes implied.
+
+## Retired WebUI X hosts
+
+WebUI X v438 Portable and v608 Play are retired, not unqualified targets.
+Support follows the latest stable WebUI X (v660). The non-WebUI-X route is
+KernelSU manager plus webui-termux-api. These rows preserve historical
+evidence only; neither old APK remains in the active manager matrix.
+
+| Retired target | Historical host | Source refs | Historical level | Evidence |
+|---|---|---|---|---|
+| `demo` module: root process, Back, app plane, shortcut, close timing, on WebUI X v608 as well as v438 | Android 15 AVD, KernelSU 3.3.0; WebUI X Portable v438 and WebUI X v608 (Play, sha256 `ae88a8ca…afb2`) | `demo v0.1.59` (`a3fc86f`), `flutter-webui@8951e5f` | simulator | [observations/avd-35-x86_64/webuix-v608-2026-10-05.md](https://github.com/p0g-stack/devicelab/blob/main/observations/avd-35-x86_64/webuix-v608-2026-10-05.md) (last section), [run 37289032287](https://github.com/p0g-stack/devicelab/actions/runs/37289032287), [run 37295018165](https://github.com/p0g-stack/devicelab/actions/runs/37295018165) |
+| WebUI X v608 page extras: package list and info, `ksu://icon`, `webui.createShortcut` + pin dialog, SHELL refusal | Android 15 AVD, WebUI X v608 (Play); v438 and KernelSU 3.3.0 for contrast | `extras_lab v1.0.0` (`cdfd6048…`), `flutter-webui@60c0b77` | simulator | [webuix-v608-2026-10-05.md](https://github.com/p0g-stack/devicelab/blob/main/observations/avd-35-x86_64/webuix-v608-2026-10-05.md) ("flutter-webui 60c0b77 extras lab"), [run 37281608189](https://github.com/p0g-stack/devicelab/actions/runs/37281608189), [run 37283223230](https://github.com/p0g-stack/devicelab/actions/runs/37283223230) (extras-only runs: the job reports failure because no standard checklist ran; the case data is complete) |
 
 ## Upstream submissions (AERA Recovery)
 
@@ -99,16 +109,15 @@ These are open, not proven:
   reuse our message kinds 12–14 or 68–75, or feature bits 2–4, against it.
 - `flutter_p0g install`, `devices` and `logs` on a real device: tested against
   a fake `adb` only.
-- WebUI X v648 and the newer upstream picker protocol: unqualified. v648 is
-  newer than the v608 Play build the extras rows cover, and the picker
-  protocol is read from bytecode only. Do not port `ksu.pm()` or reuse
-  colliding host-API identifiers before qualifying them.
+- WebUI X v660 on physical devices and the newer upstream picker protocol:
+  not qualified by Android AVD runs. Do not reuse colliding host-API identifiers.
 - Predictive-back gestures: no evidence yet. The AVD's SystemUI keeps
   `EdgeBackGestureHandler` disabled (`navigation_mode=2`, TaskbarDelegate), so
   the swipe cases of the extras lab cannot run there; they need a device or
   another image. Physical-panel gesture behaviour is likewise unverified
   beyond the Infiniti taps in the row above.
-- Newer manager versions than KernelSU 3.3.0 / WebUI X v608: no runs.
+- Manager versions beyond the exact versions named in the evidence rows
+  are not covered by those rows.
 - `demo`'s wasm build under `/demo/`: the published smoke covers the JS build
   only.
 - `demo` release artifacts after `v0.1.59`: the physical and simulator rows

@@ -83,7 +83,7 @@ final class Fixture {
   };
 
   /// Builds a consistent snapshot in [root].
-  static Fixture build(String root) {
+  static Fixture build(String root, {String? webuiChangeAfterProducer}) {
     final shas = <String, String>{};
 
     void write(String repo, String path, String content) {
@@ -143,6 +143,12 @@ final class Fixture {
     );
     add('flutter-webui');
     shas['flutter-webui'] = commit('flutter-webui');
+    final webSdkProducer = shas['flutter-webui']!;
+    if (webuiChangeAfterProducer != null) {
+      write('flutter-webui', webuiChangeAfterProducer, 'source change\n');
+      add('flutter-webui');
+      shas['flutter-webui'] = commit('flutter-webui', message: 'after SDK');
+    }
 
     // webui-termux-api, with the app-plane tag flutter_p0g pins.
     init('webui-termux-api');
@@ -253,9 +259,9 @@ final class Fixture {
       '-C',
       p.join(root, 'flutter-webui'),
       'rev-parse',
-      '${shas['flutter-webui']}:web_ui',
+      '$webSdkProducer:web_ui',
     ]);
-    final webuiShort = shas['flutter-webui']!.substring(0, 7);
+    final webuiShort = webSdkProducer.substring(0, 7);
     write(
       'flutter_p0g',
       'lib/src/webui/flutter_webui.dart',
@@ -499,6 +505,7 @@ final class Fixture {
           repo: shas[repo],
       },
       'helperRef': helperRef,
+      'webSdkProducer': webSdkProducer,
     });
     return fixture;
   }
