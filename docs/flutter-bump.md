@@ -10,14 +10,14 @@ so there is one operational copy.
 
 | | Version | Framework / engine | Dart |
 |---|---|---|---|
-| In the repositories now | 3.47.5 | `af7e796` | 3.13.4 |
-| Target | 3.47.9 | framework `c197ca5199e9ee5661e865596c9c07294dfab51c`, engine `89c39edfdfae2949f6806e4a315c0c08522238b7` | 3.13.7 |
+| In the repositories now ([`stack.lock.json`](../stack.lock.json)) | 3.47.9 | framework `c197ca5199e9ee5661e865596c9c07294dfab51c`, engine `89c39edfdfae2949f6806e4a315c0c08522238b7` | 3.13.7 |
+| Before this bump | 3.47.5 | `af7e796` | 3.13.4 |
 
-The target's Linux archive is
+The 3.47.9 Linux archive is
 `flutter_linux_3.47.9-stable.tar.xz`, SHA256
 `25ed8c3c29d51a7353f2a944310b478af8214920639524b19c50a19e6c044c5a`.
 
-Install the target into its own directory and put that directory's `bin` on
+Install a new version into its own directory and put that directory's `bin` on
 `PATH` for qualification. Never `flutter upgrade` the active installation in
 place: keep the old SDK available until the new one has passed.
 
