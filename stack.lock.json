@@ -8,15 +8,15 @@
     "dart": "3.13.7"
   },
   "repos": {
-    "bricks": "81f6282597bbc10371e09fb15b9b83450355ccb7",
-    "demo": "8fd491021ca420e21fa263f2af34d7bf3a967ba2",
-    "flasher-web": "aa2b7eb7d3904dd59227fec9b8ff3e2410b853e4",
+    "bricks": "4db4a419a44da5ae5f49c97bb21e2a5633b029b1",
+    "demo": "f36beece763d3ceef486b4e5597013ca14866899",
+    "flasher-web": "bfe7278d98f06478d94ba883a52ac8012eecdc34",
     "flutter-aera": "0c28b4e291849f008d7ee3fd063e2670d0f9116b",
-    "flutter-webui": "374766e3913972aedca2e0a7778d88b5d398459a",
-    "flutter_p0g": "a00aa6af51690ec2353d55621dfd79fd0bccf55c",
+    "flutter-webui": "72df180304562037fbc720153967fbb70a362eb1",
+    "flutter_p0g": "2612b4d73a4f643d49f30d0940917b15f4ae09a3",
     "squadron_process": "8f639eb8d2e200866ace17cca03c9d7c4705f5f9",
-    "webui-packages": "9f860cbc23d80b7f0c17ad0df0d589677c0605e2",
-    "webui-termux-api": "f46ffdf2796b2695cb0f201ec445db6741635ab4"
+    "webui-packages": "6dd4ab232b6ec230cd8b05466d28e234aab831e8",
+    "webui-termux-api": "7cab1c4624822ef261c61b9d068a7c07cfa3f32e"
   },
   "helperRef": "d3b6de00bd5e88910b9b42036a819b06159085f5"
 }
